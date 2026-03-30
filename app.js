@@ -280,5 +280,20 @@ const hT = txt => {const d=document.createElement('div');d.innerHTML=txt;return 
     });
     $('resetBtn').addEventListener('click',reset);
     $('errorResetBtn').addEventListener('click',reset);
+
+    // ── Mouse-following glow ──
+    const mg = document.getElementById('mouseGlow');
+    let mx=-600,my=-600,tmx=-600,tmy=-600,anim;
+    document.addEventListener('mousemove',e=>{
+        tmx=e.clientX-300; tmy=e.clientY-300;
+        document.body.classList.add('has-mouse');
+        if(!anim) anim=requestAnimationFrame(step);
+    });
+    function step(){
+        mx+=(tmx-mx)*.12; my+=(tmy-my)*.12;
+        mg.style.transform='translate('+mx+'px,'+my+'px)';
+        anim=requestAnimationFrame(step);
+    }
+
     reset();
 })();

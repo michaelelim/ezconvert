@@ -6,12 +6,28 @@
 html,body{height:100%;overflow-x:hidden}
 body{font-family:var(--font);background:var(--bg);color:var(--text);position:relative}
 
+/* ── Ambient static glows ── */
 .bg-glow{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
-.bg-glow::before,.bg-glow::after{content:'';position:absolute;border-radius:50%;filter:blur(120px);opacity:.3}
+.bg-glow::before,.bg-glow::after{content:'';position:absolute;border-radius:50%;filter:blur(120px);opacity:.25}
 .bg-glow::before{width:600px;height:600px;background:radial-gradient(circle,rgba(102,126,234,.6),transparent 70%);top:-10%;left:-10%;animation:aA 30s ease-in-out infinite alternate}
 .bg-glow::after{width:500px;height:500px;background:radial-gradient(circle,rgba(124,58,237,.5),transparent 70%);bottom:-15%;right:-10%;animation:aB 35s ease-in-out infinite alternate}
 @keyframes aA{0%{transform:translate(0,0)}100%{transform:translate(60px,40px) scale(1.15)}}
 @keyframes aB{0%{transform:translate(0,0)}100%{transform:translate(-40px,-60px) scale(.9)}}
+
+/* ── Mouse-following cursor glow ── */
+#mouseGlow{
+    position:fixed;
+    width:600px;height:600px;
+    border-radius:50%;
+    pointer-events:none;
+    z-index:0;
+    opacity:0;
+    transition:opacity .6s ease;
+    background:radial-gradient(circle at center,rgba(139,92,246,.15) 0%,rgba(102,126,234,.08) 40%,transparent 70%);
+    filter:blur(0px);
+    mix-blend-mode:screen;
+}
+body.has-mouse #mouseGlow{opacity:1}
 
 .hidden{display:none!important}
 
@@ -86,4 +102,5 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);position:rel
     .file-card{flex-direction:column;text-align:center;gap:12px;padding:18px}
     .file-meta{text-align:center}
     .badge-row span{font-size:11px;padding:5px 10px}
+    #mouseGlow{width:300px;height:300px}
 }
