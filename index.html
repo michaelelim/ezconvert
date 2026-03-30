@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EZConvert — Convert Anything</title>
+    <meta name="description" content="Drag & drop files or paste YouTube URLs. Convert anything to anything — starting with YouTube → MP3.">
+    <meta property="og:title" content="EZConvert — Convert Anything">
+    <meta property="og:description" content="Drag & drop files or paste YouTube URLs. Convert anything to anything.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://michaelelim.github.io/ezconvert/">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23667eea'><path d='M13 3L4 14h7l-2 7 9-11h-7l2-7z'/><circle cx='17' cy='17' r='4' fill='%237c3aed'/></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="bg-glow"></div>
+
+    <div class="app">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <span class="logo-icon">⚡</span>
+                <span class="logo-text">EZConvert</span>
+            </div>
+            <p class="subtitle">Convert anything. Drag, drop, done.</p>
+        </header>
+
+        <!-- Input Modes -->
+        <main id="mainView">
+            <!-- Mode Toggle -->
+            <div class="mode-toggle">
+                <button class="mode-btn active" data-mode="file">📁 File</button>
+                <button class="mode-btn" data-mode="url">🔗 URL</button>
+            </div>
+
+            <!-- Drop Zone -->
+            <div class="drop-zone" id="dropZone">
+                <div class="drop-content" id="dropContent">
+                    <div class="drop-icon">📂</div>
+                    <p class="drop-title">Drop a file here</p>
+                    <p class="drop-hint">or click to browse · <span id="acceptedFormats">any file type</span></p>
+                </div>
+                <div class="file-info hidden" id="fileInfo">
+                    <div class="file-icon" id="fileIcon">📄</div>
+                    <div class="file-details">
+                        <p class="file-name" id="fileName">—</p>
+                        <p class="file-size" id="fileSize">—</p>
+                    </div>
+                    <button class="remove-file" id="removeFile" title="Remove file">×</button>
+                </div>
+            </div>
+
+            <!-- URL Input -->
+            <div class="url-input hidden" id="urlInput">
+                <div class="url-box">
+                    <span class="url-icon">🔗</span>
+                    <input type="text" id="urlField" class="url-field" placeholder="Paste a YouTube URL here...">
+                    <button class="fetch-btn" id="fetchBtn">Fetch</button>
+                </div>
+                <p class="url-hint">Paste any YouTube video link to convert to MP3</p>
+                <div class="video-preview hidden" id="videoPreview">
+                    <div class="video-thumb" id="videoThumb"></div>
+                    <div class="video-info">
+                        <p class="video-title" id="videoTitle">—</p>
+                        <p class="video-meta" id="videoMeta">—</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conversion Options -->
+            <div class="conversion-options hidden" id="conversionOptions">
+                <h3>Convert to:</h3>
+                <div class="option-grid" id="optionGrid">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <!-- Convert Button -->
+            <button class="convert-btn hidden" id="convertBtn">
+                <span>Convert</span>
+                <span class="arrow">→</span>
+            </button>
+
+            <!-- Progress -->
+            <div class="progress-section hidden" id="progressSection">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-text" id="progressText">Converting…</p>
+            </div>
+
+            <!-- Result -->
+            <div class="result-section hidden" id="resultSection">
+                <div class="result-icon">✅</div>
+                <p class="result-title">Conversion Complete!</p>
+                <p class="result-meta" id="resultMeta">—</p>
+                <button class="download-btn" id="downloadBtn">
+                    <span>⬇</span> Download
+                </button>
+                <button class="reset-btn" id="resetBtn">Start Over</button>
+            </div>
+        </main>
+
+        <!-- Error -->
+        <div class="error-section hidden" id="errorSection">
+            <div class="error-icon">⚠️</div>
+            <p class="error-title" id="errorTitle">Something went wrong</p>
+            <p class="error-detail" id="errorDetail"></p>
+            <button class="reset-btn" id="errorResetBtn">Try Again</button>
+        </div>
+
+        <!-- Footer -->
+        <footer>
+            <p>Built by <a href="https://michaelelim.github.io/" target="_blank">Michael Lim</a> · More converters coming soon</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
