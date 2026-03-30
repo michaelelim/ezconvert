@@ -3,108 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EZConvert — Convert Anything</title>
-    <meta name="description" content="Drag & drop any file to convert it instantly. Images, video, text, data — all in your browser.">
-    <meta property="og:title" content="EZConvert — Convert Anything">
-    <meta property="og:description" content="Drag & drop any file. Instant browser-side conversion — no uploads, no server.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://michaelelim.github.io/ezconvert/">
+    <title>EZConvert</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23667eea'><path d='M13 3L4 14h7l-2 7 9-11h-7l2-7z'/><circle cx='17' cy='17' r='4' fill='%237c3aed'/></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body id="pageBody">
     <div class="bg-glow"></div>
 
-    <!-- Full-window drag overlay -->
-    <div class="drag-overlay" id="dragOverlay">
-        <div class="drag-overlay-content">
-            <div class="drag-overlay-icon">📂</div>
-            <p>Drop your file to convert</p>
-        </div>
-    </div>
-
-    <div class="app">
-        <!-- Header -->
-        <header>
-            <div class="logo">
-                <span class="logo-icon">⚡</span>
-                <span class="logo-text">EZConvert</span>
-            </div>
-            <p class="subtitle">Drag & drop any file. Instant conversion in your browser — no uploads, no server.</p>
-        </header>
-
-        <!-- Main -->
-        <main id="mainView">
-            <!-- File picker (always visible as the entry point) -->
-            <div class="drop-zone" id="dropZone">
-                <div class="drop-content" id="dropContent">
-                    <div class="drop-icon">📂</div>
-                    <p class="drop-title">Drop a file anywhere on the page</p>
-                    <p class="drop-hint">or <span class="browse-link">click to browse</span></p>
-                    <div class="supported-types">
-                        <span>🖼️ Images</span>
-                        <span>📊 Data</span>
-                        <span>📝 Text</span>
-                        <span>🎬 Video (thumbnails)</span>
-                    </div>
+    <main id="app">
+        <!-- Drop state -->
+        <section class="state drop-state" id="dropState">
+            <div class="center-content">
+                <div class="brand">
+                    <span class="brand-icon">⚡</span>
+                    <span class="brand-text">EZConvert</span>
                 </div>
-                <!-- File loaded state -->
-                <div class="file-info hidden" id="fileInfo">
+                <div class="drop-message">
+                    <div class="drop-emoji">📂</div>
+                    <p class="drop-title">Drop a file here</p>
+                    <p class="drop-hint">or <a href="#" id="browseLink">browse</a></p>
+                </div>
+                <div class="badge-row">
+                    <span>🖼️ Images</span>
+                    <span>📊 CSV/JSON</span>
+                    <span>📝 Text</span>
+                    <span>🎬 Video thumbnails</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- File loaded state -->
+        <section class="state file-state hidden" id="fileState">
+            <div class="center-content">
+                <div class="brand">
+                    <span class="brand-icon">⚡</span>
+                    <span class="brand-text">EZConvert</span>
+                </div>
+                <div class="file-card">
                     <div class="file-icon" id="fileIcon">📄</div>
-                    <div class="file-details">
+                    <div class="file-meta">
                         <p class="file-name" id="fileName">—</p>
                         <p class="file-size" id="fileSize">—</p>
                     </div>
-                    <button class="remove-file" id="removeFile" title="Remove file">×</button>
+                    <button class="remove-btn" id="removeFile">×</button>
                 </div>
-            </div>
-
-            <!-- Conversion options -->
-            <div class="conversion-options hidden" id="conversionOptions">
-                <h3>Convert to</h3>
-                <div class="option-grid" id="optionGrid"></div>
-                <!-- Quality slider injected here -->
-            </div>
-
-            <!-- Convert button -->
-            <button class="convert-btn hidden" id="convertBtn">
-                <span>Convert</span>
-                <span class="arrow">→</span>
-            </button>
-
-            <!-- Progress -->
-            <div class="progress-section hidden" id="progressSection">
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
+                <div class="options-section" id="optionsSection">
+                    <p class="options-label">Convert to</p>
+                    <div class="option-grid" id="optionGrid"></div>
+                    <div id="qualityRow"></div>
                 </div>
+                <button class="convert-btn hidden" id="convertBtn">
+                    <span>Convert</span><span class="arrow">→</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Progress -->
+        <section class="state progress-state hidden" id="progressState">
+            <div class="center-content">
+                <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
                 <p class="progress-text" id="progressText">Converting…</p>
             </div>
+        </section>
 
-            <!-- Result -->
-            <div class="result-section hidden" id="resultSection">
-                <div class="result-icon">✅</div>
+        <!-- Result -->
+        <section class="state result-state hidden" id="resultState">
+            <div class="center-content">
+                <div class="result-emoji">✅</div>
                 <p class="result-title">Done!</p>
-                <p class="result-meta" id="resultMeta">—</p>
-                <button class="download-btn" id="downloadBtn"><span>⬇</span> Download</button>
+                <p class="result-meta" id="resultMeta"></p>
+                <button class="download-btn" id="downloadBtn">⬇ Download</button>
                 <button class="reset-btn" id="resetBtn">Convert another file</button>
             </div>
-        </main>
+        </section>
 
         <!-- Error -->
-        <div class="error-section hidden" id="errorSection">
-            <div class="error-icon">⚠️</div>
-            <p class="error-title" id="errorTitle">Conversion failed</p>
-            <p class="error-detail" id="errorDetail"></p>
-            <button class="reset-btn" id="errorResetBtn">Try again</button>
-        </div>
-
-        <!-- Footer -->
-        <footer>
-            <p>Built by <a href="https://michaelelim.github.io/" target="_blank">Michael Lim</a> · All conversions run in your browser</p>
-        </footer>
+        <section class="state error-state hidden" id="errorState">
+            <div class="center-content">
+                <div class="result-emoji">⚠️</div>
+                <p class="result-title" style="color:#ef4444" id="errorTitle">Failed</p>
+                <p class="result-meta" id="errorDetail"></p>
+                <button class="reset-btn" id="errorResetBtn">Try again</button>
+            </div>
+        </section>
     </div>
 
     <script src="app.js"></script>
