@@ -163,19 +163,23 @@ const hT = txt => {const d=document.createElement('div');d.innerHTML=txt;return 
     };
     rmFile.addEventListener('click', reset);
 
-    // Full-window drag
-    body.addEventListener('dragenter', e => {
-        e.preventDefault(); dragN++;
-        if(e.dataTransfer.types.includes('Files')) body.style.cursor='copy';
+    // Full-window drag — attach to all layers so no child swallows
+    [body].concat(Array.from(document.querySelectorAll('#app,#mouseGlow,.bg-glow,section,.center-content,.drop-state,.drop-message,.brand,.badge-row'))).forEach(el => {
+        el.addEventListener('dragenter', e => { e.preventDefault(); dragN++; body.style.cursor='copy'; });
+        el.addEventListener('dragover', e => { e.preventDefault(); });
     });
-    body.addEventListener('dragover', e => e.preventDefault());
-    body.addEventListener('dragleave', e => {
-        e.preventDefault(); dragN--;
-        if(dragN<=0){dragN=0;body.style.cursor='';}
+    [body, $('app')].concat(Array.from(document.querySelectorAll('.drop-state, #mouseGlow, .bg-glow, .center-content, .drop-message, .brand, .badge-row, .file-state, .file-card'))).forEach(el => {
+        el.addEventListener('dragleave', e => { e.preventDefault(); dragN--; if(dragN<=0){dragN=0;body.style.cursor='';} });
     });
-    body.addEventListener('drop', e => {
-        e.preventDefault(); dragN=0; body.style.cursor='';
-        if(e.dataTransfer.files.length) pickFile(e.dataTransfer.files[0]);
+    [body, $('app')].forEach(el => {
+        el.addEventListener('drop', e => {
+            e.preventDefault(); dragN=0; body.style.cursor='';
+            console.log('Drop:', e.dataTransfer.files.length, 'files');
+            if(e.dataTransfer.files.length) {
+                console.log('File:', e.dataTransfer.files[0].name, e.dataTransfer.files[0].type);
+                pickFile(e.dataTransfer.files[0]);
+            }
+        });
     });
     browseLnk.addEventListener('click', e => { e.preventDefault(); finp.click(); });
 
