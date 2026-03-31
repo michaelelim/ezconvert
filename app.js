@@ -18,13 +18,13 @@ const PROFILES = {
 };
 const FILE_ICONS = {'image/jpeg':'🎨','image/png':'🖼️','image/webp':'🌐','image/svg+xml':'📐','image/gif':'🎞️','image/avif':'📦','image/bmp':'📷','application/json':'📋','text/csv':'📊','text/plain':'📝','text/markdown':'📝','text/html':'🌐','application/xml':'📄','application/pdf':'📄'};
 const getExt = n => (n||'').split('.').pop().toLowerCase();
-const EXT_ICONS = {mp3:"🎵",wav:"🎧",mp4:"🎬",mkv:"🎬",avi:"🎬",mov:"🎬",doc:"\ud83d\udcdd",docx:"\ud83d\udcdd",md:"\ud83d\udcdd"};
+const EXT_ICONS = {mp3:'🎵',wav:'🎧',mp4:'🎬',mkv:'🎬',avi:'🎬',mov:'🎬',doc:'📝',docx:'📝',md:'📝'};
 const fileIcon = (t,n) => {
     if(FILE_ICONS[t]) return FILE_ICONS[t];
-    if(t.startsWith("image/")) return "🖼️";
-    if(t.startsWith("video/")) return "🎬";
-    if(t.startsWith("audio/")) return "🎵";
-    return EXT_ICONS[getExt(n)] || "📄";
+    if(t.startsWith('image/')) return '🖼️';
+    if(t.startsWith('video/')) return '🎬';
+    if(t.startsWith('audio/')) return '🎵';
+    return EXT_ICONS[getExt(n)] || '📄';
 };
 const fmtBytes = b => {if(!b)return'0 B';const u=['B','KB','MB','GB'];const i=Math.floor(Math.log(b)/Math.log(1024));return(b/1024**i).toFixed(i?1:0)+' '+u[i];};
 const esc = t => {const d=document.createElement('div');d.textContent=t;return d.innerHTML;};
@@ -60,31 +60,26 @@ async function makeImagePDF(canvas) {
     const enc = new TextEncoder();
     const off = {};
     const parts = [];
-    function add(s) { parts.push(typeof s === 'string' ? enc.encode(s) : s); off._cur += s.length; }
+    function txt(s) { parts.push(enc.encode(s)); off._cur = (off._cur||0)+s.length; }
+    function raw(buf) { parts.push(buf); off._cur = (off._cur||0)+buf.byteLength; }
 
-    let p = '%PDF-1.4\n';
-    off[1] = p.length;
-    p += '1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n';
-    off[2] = p.length;
-    p += '2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n';
-    off[3] = p.length;
-    p += '3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+W+' '+H+'] /Contents 4 0 R /Resources << /XObject << /I1 5 0 R >> >> >>\nendobj\n';
-    off[4] = p.length;
-    p += '4 0 obj\n<< /Length '+stream.length+' >>\nstream\n';
-    let pre = p; p = pre + stream;
-    p += '\nendstream\nendobj\n';
-    off[5] = p.length;
-    p += '5 0 obj\n<< /Type /XObject /Subtype /Image /Width '+iW+' /Height '+iH+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+jpeg.length+' >>\nstream\n';
-    const pre2 = p;
-    // Binary: pre + jpeg + post2
-    const post2 = '\nendstream\nendobj\n';
-    const xref = pre2.length + jpeg.length + post2.length;
-    let xrefStr = 'xref\n0 6\n0000000000 65535 f \n';
-    for(let i=1;i<=5;i++) xrefStr += String(off[i]).padStart(10,'0')+' 00000 n \n';
-    xrefStr += 'trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF\n';
-    const post = post2 + xrefStr;
+    txt('%PDF-1.4\n');
+    off[1] = (off._cur||0);
+    txt('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
+    off[2] = off._cur; txt('2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n');
+    off[3] = off._cur; txt('3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+W+' '+H+'] /Contents 4 0 R /Resources << /XObject << /I1 5 0 R >> >> >>\nendobj\n');
+    off[4] = off._cur; txt('4 0 obj\n<< /Length '+stream.length+' >>\nstream\n');
+    raw(enc.encode(stream)); txt('\nendstream\nendobj\n');
+    off[5] = off._cur; txt('5 0 obj\n<< /Type /XObject /Subtype /Image /Width '+iW+' /Height '+iH+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+jpeg.length+' >>\nstream\n');
+    const preLen = off._cur;
+    raw(jpeg);
+    txt('\nendstream\nendobj\n');
 
-    return new Blob([enc.encode(pre2), jpeg, enc.encode(post)], {type:'application/pdf'});
+    const xrefStart = off._cur;
+    txt('xref\n0 6\n0000000000 65535 f \n');
+    for(let i=1;i<=5;i++) txt(String(off[i]).padStart(10,'0')+' 00000 n \n');
+    txt('trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n'+xrefStart+'\n%%EOF\n');
+    return new Blob(parts, {type:'application/pdf'});
 }
 
 async function canvasToICO(c) {
@@ -137,29 +132,51 @@ const hT = txt => {const d=document.createElement('div');d.innerHTML=txt;return 
     const qualRow  = $('qualityRow');
     const convBtn  = $('convertBtn');
     const progF    = $('progressFill');
+    const optSec   = $('optionsSection');
+
     let file = null, fmt = null, blob = null, ext = 'bin', dragN = 0;
+
+    // File input
     const finp = document.createElement('input');
     finp.type='file'; finp.accept='*/*';
     finp.addEventListener('change',()=>{if(finp.files[0]) pickFile(finp.files[0]);finp.value='';});
 
-    finp.type='file'; finp.accept='*/*';
-    finp.addEventListener('change',()=>{if(finp.files[0]) pickFile(finp.files[0]);finp.value='';});
+    // No-conversions indicator (built into DOM)
+    const noMsg = document.createElement('div');
+    noMsg.style.cssText = 'display:none;padding:16px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:10px;text-align:center;max-width:420px;width:100%';
+    noMsg.innerHTML = '<p style="font-size:13px;color:var(--text-dim);margin-bottom:6px">No browser-side conversions for this file type</p>' +
+        '<p style="font-size:11px;color:var(--text-muted);margin-bottom:8px">Supported conversions:</p>' +
+        '<p style="font-size:10px;color:var(--text-muted);line-height:1.6">' +
+        'Images: JPG/PNG/WebP/BMP/GIF/AVIF/SVG &rarr; JPG/PNG/WebP/PDF/ICO<br>' +
+        'CSV &harr; JSON &nbsp;|&nbsp; Markdown/Text &rarr; HTML &nbsp;|&nbsp; Video &rarr; thumbnails</p>';
+    optSec.appendChild(noMsg);
 
-    // Add "no conversions" indicator to options section
-    $('optionsSection').innerHTML += '<div class="no-convert" id="noFmt" style="display:none">' +
-        '<p style="color:var(--text-dim);font-size:13px;margin-bottom:8px">No conversions available for this file type</p>' +
-        '<p style="color:var(--text-muted);font-size:11px;margin-bottom:6px">Supported: JPG/PNG/WebP ↔ JPG/PNG/WebP/BMP/PDF/ICO  ·  CSV ↔ JSON  ·  Markdown/TXT → HTML  ·  Video → thumbnails</p></div>';
-    const noFmt = $('noFmt');
-
+    // Helpers
     const showS = el => [dropS,fileS,progS,resultS,errorS].forEach(s=>s.classList.add('hidden'))||el.classList.remove('hidden');
-    const reset = () => { file=null;fmt=null;blob=null;ext='bin'; noFmt.classList.add('hidden'); optGrid.innerHTML=''; qualRow.innerHTML=''; convBtn.classList.add('hidden'); showS(dropS); progF.style.width='0%'; };
+    const reset = () => {
+        file=null; fmt=null; blob=null; ext='bin';
+        noMsg.style.display='none';
+        optGrid.innerHTML=''; qualRow.innerHTML='';
+        convBtn.classList.add('hidden');
+        optSec.classList.add('hidden');
+        showS(dropS); progF.style.width='0%';
+    };
     rmFile.addEventListener('click', reset);
 
     // Full-window drag
-    body.addEventListener('dragenter', e => { e.preventDefault(); dragN++; if(e.dataTransfer.types.includes('Files')) body.style.cursor='copy'; });
+    body.addEventListener('dragenter', e => {
+        e.preventDefault(); dragN++;
+        if(e.dataTransfer.types.includes('Files')) body.style.cursor='copy';
+    });
     body.addEventListener('dragover', e => e.preventDefault());
-    body.addEventListener('dragleave', e => { e.preventDefault(); dragN--; if(dragN<=0){dragN=0;body.style.cursor='';} });
-    body.addEventListener('drop', e => { e.preventDefault(); dragN=0; body.style.cursor=''; if(e.dataTransfer.files.length) pickFile(e.dataTransfer.files[0]); });
+    body.addEventListener('dragleave', e => {
+        e.preventDefault(); dragN--;
+        if(dragN<=0){dragN=0;body.style.cursor='';}
+    });
+    body.addEventListener('drop', e => {
+        e.preventDefault(); dragN=0; body.style.cursor='';
+        if(e.dataTransfer.files.length) pickFile(e.dataTransfer.files[0]);
+    });
     browseLnk.addEventListener('click', e => { e.preventDefault(); finp.click(); });
 
     function pickFile(f) {
@@ -169,17 +186,18 @@ const hT = txt => {const d=document.createElement('div');d.innerHTML=txt;return 
         fileSizE.textContent = fmtBytes(f.size);
         qualRow.innerHTML=''; optGrid.innerHTML=''; convBtn.classList.add('hidden');
         showS(fileS);
+        noMsg.classList.add('hidden');
+        optSec.classList.remove('hidden');
         showOpts(f);
-        $('optionsSection').classList.remove('hidden');
     }
 
     function showOpts(f) {
-        noFmt.classList.add('hidden');
+        noMsg.style.display='none';
         const opts = PROFILES[f.type] || Object.entries(PROFILES).find(([k])=>f.type.startsWith(k.replace('/*','')))?.[1] || [];
         if(!opts.length) {
             optGrid.innerHTML=''; qualRow.innerHTML='';
-            // No conversions — show available formats list
-            noFmt.classList.remove('hidden');
+            noMsg.style.display='block';
+            return;
         }
         opts.forEach(o => {
             const b=document.createElement('button'); b.className='opt-chip';
@@ -188,6 +206,7 @@ const hT = txt => {const d=document.createElement('div');d.innerHTML=txt;return 
             optGrid.appendChild(b);
         });
     }
+
     function pickOpt(o) {
         fmt=o;
         optGrid.querySelectorAll('.opt-chip').forEach(c=>c.classList.toggle('sel',c.dataset.fmt===o.name+o.ext));
@@ -200,9 +219,10 @@ const hT = txt => {const d=document.createElement('div');d.innerHTML=txt;return 
         convBtn.classList.remove('hidden');
     }
 
+    // Convert button
     convBtn.addEventListener('click', async ()=>{
         convBtn.classList.add('hidden');
-        $('optionsSection').classList.add('hidden');
+        optSec.classList.add('hidden');
         showS(progS); progF.style.width='0%';
         $('progressText').textContent='Converting…';
         try {
