@@ -142,8 +142,17 @@ const hT = txt => {const d=document.createElement('div');d.innerHTML=txt;return 
     finp.type='file'; finp.accept='*/*';
     finp.addEventListener('change',()=>{if(finp.files[0]) pickFile(finp.files[0]);finp.value='';});
 
+    finp.type='file'; finp.accept='*/*';
+    finp.addEventListener('change',()=>{if(finp.files[0]) pickFile(finp.files[0]);finp.value='';});
+
+    // Add "no conversions" indicator to options section
+    $('optionsSection').innerHTML += '<div class="no-convert" id="noFmt" style="display:none">' +
+        '<p style="color:var(--text-dim);font-size:13px;margin-bottom:8px">No conversions available for this file type</p>' +
+        '<p style="color:var(--text-muted);font-size:11px;margin-bottom:6px">Supported: JPG/PNG/WebP ↔ JPG/PNG/WebP/BMP/PDF/ICO  ·  CSV ↔ JSON  ·  Markdown/TXT → HTML  ·  Video → thumbnails</p></div>';
+    const noFmt = $('noFmt');
+
     const showS = el => [dropS,fileS,progS,resultS,errorS].forEach(s=>s.classList.add('hidden'))||el.classList.remove('hidden');
-    const reset = () => { file=null;fmt=null;blob=null;ext='bin'; showS(dropS); progF.style.width='0%'; };
+    const reset = () => { file=null;fmt=null;blob=null;ext='bin'; noFmt.classList.add('hidden'); optGrid.innerHTML=''; qualRow.innerHTML=''; convBtn.classList.add('hidden'); showS(dropS); progF.style.width='0%'; };
     rmFile.addEventListener('click', reset);
 
     // Full-window drag
@@ -165,8 +174,13 @@ const hT = txt => {const d=document.createElement('div');d.innerHTML=txt;return 
     }
 
     function showOpts(f) {
+        noFmt.classList.add('hidden');
         const opts = PROFILES[f.type] || Object.entries(PROFILES).find(([k])=>f.type.startsWith(k.replace('/*','')))?.[1] || [];
-        if(!opts.length) return;
+        if(!opts.length) {
+            optGrid.innerHTML=''; qualRow.innerHTML='';
+            // No conversions — show available formats list
+            noFmt.classList.remove('hidden');
+        }
         opts.forEach(o => {
             const b=document.createElement('button'); b.className='opt-chip';
             b.innerHTML = '<span>'+o.icon+'</span> '+o.name;

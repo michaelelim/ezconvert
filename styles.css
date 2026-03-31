@@ -95,6 +95,9 @@ body.has-mouse #mouseGlow{opacity:1}
 .reset-btn:hover{color:var(--text);border-color:var(--accent)}
 .result-state,.error-state{gap:10px}
 
+/* ── Footer ── */
+#siteFooter{position:relative;z-index:1;text-align:center;padding:20px 0 16px;font-size:12px;color:var(--text-dim);margin-top:auto}
+
 @media(max-width:600px){
     .brand-text{font-size:28px}
     .drop-emoji{font-size:44px}
